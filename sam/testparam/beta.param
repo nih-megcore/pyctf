@@ -1,0 +1,35 @@
+Verbose
+
+#%include ROI2cm
+%include ROI
+%include 9rmarks
+
+#NumMarkers 6
+#Marker1 9r0 -.5 0 TRUE 9r0pre
+#Marker2 9r0 0 .5 TRUE 9r0post
+#Marker3 9r1 -.5 0 TRUE 9r1pre
+#Marker4 9r1 0 .5 TRUE 9r1post
+#Marker5 9r2 -.5 0 TRUE 9r2pre
+#Marker6 9r2 0 .5 TRUE 9r2post
+
+Mu 3
+
+CovBand 15 30
+ImageBand 15 30
+OrientBand 15 30
+SmoothBand 0 15
+
+#Model MultiSphere
+Model Nolte
+#MRIPattern %M/%H/%s
+
+MRIDirectory mri
+ImageDirectory image
+
+ImageMetric Power
+Timestep .01
+
+#CovType ALL
+CovType SUM
+
+ImageFormat ORIG

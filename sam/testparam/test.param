@@ -1,0 +1,20 @@
+Verbose
+
+%include ROI
+#%include 9rmarks
+
+Marker press 0 .5
+
+Mu 3
+
+CovBand 15 30
+OrientBand 15 30
+
+#Model MultiSphere
+Model Nolte
+
+MRIDirectory mri
+ImageDirectory image
+
+#CovType ALL
+CovType SUM

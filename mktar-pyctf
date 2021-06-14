@@ -1,0 +1,4 @@
+#! /bin/sh
+
+echo creating /tmp/pyctf.tgz
+git archive --format=tar --prefix=pyctf/ HEAD | gzip > /tmp/pyctf.tgz

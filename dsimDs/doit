@@ -1,0 +1,10 @@
+#! /bin/sh
+
+sub=/home/tomh/data_reformat/sub-0002
+ds=$sub/sub-0002_rest_single_trial.ds
+mri=$sub
+p=$sub/sim.param
+a=$sub/atlas
+
+./dsimDs -d $ds -p $p -o /tmp/new.ds -n 72000 -r 2400 --mridir $mri -A $a
+sumDs -f $ds /tmp/new.ds /tmp/sum.ds

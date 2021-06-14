@@ -1,0 +1,118 @@
+#! /usr/bin/env python
+
+import os, sys, time
+import numpy as np
+
+import pyctf
+from pyctf.param import Param, getStdParam
+from pyctf.param.prop import Filename, Dirname, Int, Str, Float, FloatList
+from sim.dsim import dsim
+
+Usage = """-p paramfile -d $ds -o $newds [-n nsamp] [-r srate] [options]
+Create a new dataset, with nsamp samples and srate Hz sampling rate. The
+-d $ds argument specifies an existing dataset, from which the head position
+is read. The new dataset will use the same head position. The parameter file
+is used to specify an atlas, the forward model, and other parameters. The
+atlas file can be a GIFTI file (.gii) created with mkGiiAtlas.py, or a text
+file created with FSnormals.py. The sources specified in the atlas will be
+activated using the noise model specified in the parameter file."""
+
+# Parameter defaults.
+
+pname = None
+dsname = None
+newdsname = None
+nsamp = 1200
+srate = 1200
+
+DEFMODEL = 'none'
+#DEFMODEL = 'norm'
+DEFNOISE = 5
+
+# Get a standard parameter parser accepting these parameters.
+
+p = getStdParam(['MRIDirectory', 'MRIPattern', 'Prefix', ## 'LogFile',
+                 'HullName', 'AtlasName', 'CovBand', 'CovName', 'NoiseBand',
+                 'FilterType', 'Model', 'Order'], usage = Usage)
+
+# Add a few custom parameters.
+
+p.register('LogFile', 'L', Filename(),  # @@@ this should be moved to registry.py
+    arghelp = "LOGFILE",
+    help = "Name for the output log file.\nLogging is enabled when you set this.")
+
+p.register('OutName', 'o', Dirname(default = "dsim.ds"),
+    arghelp = "NAME", help = "Output dataset name, default dsim.ds")
+
+p.register('Nsamp', 'n', Int(default = nsamp),
+    arghelp = "NSAMP", help = "Number of samples to generate (default {})".format(nsamp))
+
+p.register('Srate', 'r', Int(default = srate),
+    arghelp = "SRATE", help = "Set the sampling rate (default {})".format(srate))
+
+p.register('NoiseModel', None, Str(default = DEFMODEL),
+    arghelp = "MODEL", help = """Set the noise model, default '{}'.
+'none'  no noise, just simulated dipoles.
+'norm'  activates each dipole with a constant amplitude
+        gaussian noise.
+'white' same as 'normal'.
+'pink'  similar to 'normal', but with a 1/f spectrum.
+'var'   activates dipoles using variable amplitude
+        gaussian noise.""".format(DEFMODEL))
+
+p.register('NoiseLevel', 'N', Float(), arghelp = "SD", default = DEFNOISE,
+            help = """Specify the noise amplitude (default {}).
+For the 'var' model, the amplitudes are drawn from a uniform
+distribution with NoiseLevel as the maximum.""".format(DEFNOISE))
+
+
+p.register('Sfreqs', 's', FloatList(), listValue = True,
+    arghelp = "f1 f2 ... fn",
+    help = """Add n sinusoidal dipole sources to the output. Use the first n
+dipoles given in the atlas (preferably the text atlas).
+Frequencies in Hz.""")
+
+p.register('Samps', 'a', FloatList(), listValue = True,
+    arghelp = "a1 a2 ... an",
+    help = """Amplitudes for the dipole sources. Use with --Sfreqs.
+Values in nA-m.""")
+
+p.register('Sphases', 'P', FloatList(), listValue = True,
+    arghelp = "a1 a2 ... an",
+    help = """Phases for the dipole sources. Use with --Sfreqs.
+Values in degrees.""")
+
+
+#p.register('', None, types., arghelp = "", help = "")
+
+# Parse the command line, env vars, and files.
+
+p.parseAll()
+
+# Do some checking.
+
+if p.DataSet is None:
+    print("Please specify a dataset.")
+    p.do_help()
+
+if p.OutName is None:
+    print("Please specify an output dataset name.")
+    p.do_help()
+
+if p.Nsamp <= 0:
+    raise ValueError("Nsamp must be a positive integer")
+if p.Srate <= 0 or p.Srate > 12000:
+    raise ValueError("invalid Srate")
+
+if p.AtlasName is None:
+    print("Please specify an atlas.")
+    p.do_help()
+
+if (p.Sfreqs is None and p.Samps is not None) or \
+   (p.Sfreqs is not None and p.Samps is None):
+    raise ValueError("Must specify both --Sfreqs and --Samps")
+
+if len(p.Sfreqs) != len(p.Samps):
+    raise ValueError("Number of frequencies does not match number of amplitudes")
+
+dsim(p)

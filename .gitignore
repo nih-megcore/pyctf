@@ -1,0 +1,12 @@
+*~
+*.o
+*.pyc
+*.a
+*.so
+*.bak
+*.npy
+bin/
+lib/
+*_pb2.py
+_build/
+__pycache__/

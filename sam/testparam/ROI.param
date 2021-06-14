@@ -1,0 +1,4 @@
+XBounds -10 10
+YBounds -9 9
+ZBounds -2 14
+ImageStep .8
